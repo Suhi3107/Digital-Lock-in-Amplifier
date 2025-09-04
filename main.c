@@ -1,49 +1,11 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include <string.h>
 #include "arm_math.h"
 #include <stdio.h>
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
 #define Ns 128 // Sine 128 point LUT
 #define Periodos 25 // No of sine waves
 #define pntsScan 550 //No of scan points/ No of ramp steps each with delay 30msec and step size 0x05
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-
 /* Internal Sine wave of 2kHz frequency and sin amp 76mV p-p
  * Max amp 1665 Min amp 300 no of pnts 128 peak to peak 76mV*/
 uint32_t LUT76[Ns] = {983,1016,1049,1083,1116,1148,1181,1212,1244,1274,1304,1333,1362,1389,
@@ -62,13 +24,9 @@ char resp1[4] = {'n', 'e', 'x', 't'};
 char resp2[4] = {'a', 'b', 'c', 'd'};
 char dados[4];
 int C;
-
-
 int ret;
 int i = 0;
-/* USER CODE END PM */
 
-/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 ADC_HandleTypeDef hadc3;
@@ -83,7 +41,6 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart9;
 UART_HandleTypeDef huart2;
 
-/* USER CODE BEGIN PV */
 uint32_t AdcRead[(Periodos*Ns)];
 uint32_t AdcRead_1[(Periodos*Ns)];
 uint32_t resultado[(Periodos*Ns)];	// Array that temporarily stores 1st and 2nd Harmonics
@@ -93,28 +50,14 @@ float arg2 = 2 * 3.14159265358979323 * 2;
 float arg3 = 2 * 3.14159265358979323 * 3;
 float arg4 = 2 * 3.14159265358979323 * 4;
 float ph=0.0;
-//float mod4h[pntsScan];
-//float mod3h[pntsScan];
 float mod2h[pntsScan]; //2f M
 float mod1h[pntsScan]; //1f M
-//float fase4h[pntsScan];
-//float fase3h[pntsScan];
 float fase2h[pntsScan]; //2fX
 float fase1h[pntsScan]; // 1fX
-//float quad4h[pntsScan];
 float quad3h[pntsScan]; //3fY
 float quad2h[pntsScan]; //2fY
 float quad1h[pntsScan]; //1fY
-
 int j = 0;
-//float mod3h_m[pntsScan];
-//float mod3h_2m[pntsScan];
-//float mod2h_m[pntsScan];
-//float mod1h_m[pntsScan];
-//float mod4h_avg[pntsScan];
-//float mod2h_avg[pntsScan];
-//float mod1h_avg[pntsScan];
-//float det_avg[pntsScan];
 int scan_nr=0;
 float32_t t[Ns];
 float32_t step;
@@ -122,9 +65,7 @@ uint32_t LUT[Ns]={};
 float32_t sinLUT[Ns], cosLUT[Ns];
 float soma = 0;
 float media[5];
-/* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -136,13 +77,9 @@ static void MX_USART2_UART_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_ADC3_Init(void);
 static void MX_UART9_Init(void);
-/* USER CODE BEGIN PFP */
-//uint16_t zero_detection(float* mod_3h);
-void moving_average(float32_t* arr, uint32_t n, uint32_t window_size, float32_t* result);
-/* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
+void moving_average(float32_t* arr, uint32_t n, uint32_t window_size, float32_t* result);
+
 int _write(int file, char *ptr, int len)
 {
 	HAL_UART_Transmit(&huart9,(uint8_t*)ptr,len,HAL_MAX_DELAY);
@@ -158,39 +95,11 @@ void moving_average(float32_t* arr, uint32_t n, uint32_t window_size, float32_t*
     }
 }
 
-/* USER CODE END 0 */
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
-
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-
 	HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* Configure the peripherals common clocks */
   PeriphCommonClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_TIM1_Init();
@@ -200,21 +109,16 @@ int main(void)
   MX_ADC2_Init();
   MX_ADC3_Init();
   MX_UART9_Init();
-  /* USER CODE BEGIN 2 */
-  /****Reference sine wave LUT**8*/
   for (int k = 0; k < Ns; ++k) {
     float phase = 2.0f * 3.14159265358979323846f * k / Ns;
     sinLUT[k] = arm_sin_f32(phase);
     cosLUT[k] = arm_cos_f32(phase);
   }
-  /******Internal Sine LUT********/
   memcpy(LUT,LUT76,sizeof(LUT));
   for(int k=0;k<Ns;k++)
   {
   	LUT[k]=(uint32_t)((LUT[k]/15)+40); // P-p 75mV offset 104mV (default offset)
   }
-
-  /*Initialise Peripheral*/
     HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)LUT, Ns, DAC_ALIGN_12B_R);//76mV default sine wave
     HAL_ADC_Start_DMA(&hadc1, AdcRead, (Periodos*Ns));
      HAL_ADC_Start_DMA(&hadc2, AdcRead_1, (Periodos*Ns));
@@ -222,11 +126,6 @@ int main(void)
      HAL_TIM_Base_Start(&htim1);
      HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
      HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-  /* USER CODE END 2 */
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-
-
      step=30;
      for (int i = 0; i <Ns; i++) {
         	    	     t[i] = 0 + ((double)i * step);
@@ -234,14 +133,6 @@ int main(void)
         	    	     }
   while (1)
   {
-    /* USER CODE END WHILE */
-    /* USER CODE BEGIN 3 */
-	  // HAL_UART_Receive(&huart9, command, 5, 10);
-	  //ret1=strcmp(command, "phase",5);
-	  //if(ret1==0){
-	  //command[0]="a";
-	  //phase=
-	  //}
 	  // **************************DSP Lock In Amplifier************************************
 	  HAL_UART_Receive(&huart2, (uint8_t*)recebido, 4, 10); //timeout to be reduced to 10msec
 	 //clock_speed = HAL_RCC_GetSysClockFreq();
@@ -255,82 +146,24 @@ int main(void)
 	  if (ret == 0){		// If Received the string "abcd"?
 		  	  	  	  	  	//Reached end of Ramp. Send result on UART
 	  	 		  		  recebido[0] = 'l';
-	  	 		 // HAL_UART_Transmit(&huart9, "2Hm MODL,1Hm MODL,4Hm MODL" , 22, 200);
-	  	 		  	/*for (i = 0; i <= pntsScan; i++){
-	  	 		  	//printf("%f,",fase1h[i]);
+	  	 		  HAL_UART_Transmit(&huart9, "2Hm MODL,1Hm MODL,4Hm MODL" , 22, 200);
+	  	 		  	for (i = 0; i <= pntsScan; i++){
+	  	 		  	printf("%f,",fase1h[i]);
 	  	 		  	printf("%f\n\r",quad3h[i]);
-	  	 		  	//printf("%f,",fase2h[i]);
-	  	 		  	//printf("%f\n\r",quad2h[i]);
-	  	 		  	//HAL_Delay(10);
-	  	 		  	}*/
-	  	 		 //printf("\n\r");
-
-	  	 		  	/*****Send Identifier for wave denoising*******/
-	  	 		 	  	 		printf("2fX,");
-
-	  	 		 	  	 		    // 2) send all X values, comma‐separated, then newline
-	  	 		 	  	 		    for (int i = 0; i < pntsScan; ++i) {
-	  	 		 	  	 		        printf("%f", fase2h[i]);
-	  	 		 	  	 		        if (i < pntsScan-1)  printf(",");
-	  	 		 	  	 		    }
-	  	 		 	  	 		    printf("\n");
-
-	  	 		 	  	 		    // 3) header for the Y‐stream
-	  	 		 	  	 		    printf("2fY,");
-
-	  	 		 	  	 		    // 4) send all Y values
-	  	 		 	  	 		    for (int i = 0; i < pntsScan; ++i) {
-	  	 		 	  	 		        printf("%f", quad2h[i]);
-	  	 		 	  	 		        if (i < pntsScan-1)  printf(",");
-	  	 		 	  	 		    }
-	  	 		 	  	 		    printf("\n");
-
-	  	 		 	  	 		    printf("3fX,");
-
-	  	 		 	  	 		    // 2) send all X values, comma‐separated, then newline
-	  	 		 	  	 			for (int i = 0; i < pntsScan; ++i) {
-	  	 		 	  	 				printf("%f", quad3h[i]);
-	  	 		 	  	 			 	if (i < pntsScan-1)  printf(",");
-	  	 		 	  	 				}
-	  	 		 	  	 			printf("\n");
-
-	  	 		 	  	 		    /*printf("1fX,%d\n", pntsScan);
-
-	  	 		 	  	 		    // 2) send all X values, comma‐separated, then newline
-	  	 		 	  	 		    for (int i = 0; i < pntsScan; ++i) {
-	  	 		 	  	 		        printf("%.6f", fase1h[i]);
-	  	 		 	  	 		        if (i < pntsScan-1)  printf(",");
-	  	 		 	  	 		    }
-	  	 		 	  	 		    printf("\n");
-
-	  	 		 	  	 		    printf("1fY,%d\n", pntsScan);
-
-	  	 		 	  	 		    // 2) send all X values, comma‐separated, then newline
-	  	 		 	  	 		    for (int i = 0; i < pntsScan; ++i) {
-	  	 		 	  	 		        printf("%.6f", quad1h[i]);
-	  	 		 	  	 		        if (i < pntsScan-1)  printf(",");
-	  	 		 	  	 		    }
-	  	 		 	  	 		    printf("\n");
-
-	  	 		 	  	 		    */
-
-
-
+	  	 		  	printf("%f,",fase2h[i]);
+	  	 		  	printf("%f\n\r",quad2h[i]);
+	  	 		  	HAL_Delay(10);
+	  	 		  	}
 	  	 		  	j=0;
-	  	  		for (int k = 0; k < pntsScan; k++){	// Clearing all vectors
-	  	  						//fase3h[k] = 0;
-	  	  						fase2h[k] = 0;
-	  	  						quad3h[k] = 0;
+	  	  		for (int k = 0; k < pntsScan; k++){	// Clearing all vectors	  	  	
+	  	  						fase2h[k] = 0;	  	  			
 	  	  						quad2h[k] = 0;
-	  	  						//fase1h[k] = 0;
-	  	  						//quad1h[k] = 0;
-	  	  						//mod3h[k] = 0;
+	  	  						fase1h[k] = 0;
+	  	  						quad1h[k] = 0;  	  						
 	  	  						mod2h[k] = 0;
 	  	  					}
 	  	 	}
   }
-
-  /* USER CODE END 3 */
 }
 
 /**
@@ -901,10 +734,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-uint16_t zero_detection(float* mod_3h)
-{
-
-}
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc1){
 	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
 
@@ -978,3 +807,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
